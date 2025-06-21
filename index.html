@@ -22,8 +22,8 @@
       margin-top: -0.5rem;
       margin-bottom: 1rem;
     }
-    select, input[type="file"] {
-      margin: 0.5rem auto;
+    select, input[type="file"], input[type="radio"], label {
+      margin: 0.5rem;
       font-size: 110%;
     }
     #question {
@@ -87,10 +87,15 @@
 </head>
 <body>
   <h1>ÔN BÀI TALK TO KID</h1>
-  <p>Chọn chủ đề bạn muốn học hoặc tải lên file mới từ máy.</p>
+  <p>Chọn nguồn dữ liệu bạn muốn học:</p>
 
-  <div class="upload-wrapper">
-    <label for="upload">📁 Tải file Excellên</label>
+  <div>
+    <label><input type="radio" name="source" value="default" checked onchange="loadDefault()"> Dùng file có sẵn (data.xlsx)</label>
+    <label><input type="radio" name="source" value="upload" onchange="showUpload()"> Tải file Excel của bạn</label>
+  </div>
+
+  <div class="upload-wrapper" id="uploadWrapper" style="display:none;">
+    <label for="upload">📁 Tải file Excel có cột CHỦ ĐỀ</label>
     <input type="file" id="upload" accept=".xlsx" onchange="handleExcelUpload(event)">
   </div>
 
@@ -114,6 +119,22 @@
     let filteredData = [];
     let currentIndex = -1;
 
+    function showUpload() {
+      document.getElementById("uploadWrapper").style.display = "block";
+      allData = [];
+      document.getElementById("topicSelect").innerHTML = '<option value="all" selected>Tất cả</option>';
+    }
+
+    function loadDefault() {
+      document.getElementById("uploadWrapper").style.display = "none";
+      fetch('data.xlsx')
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => processWorkbook(arrayBuffer))
+        .catch(() => {
+          alert("Không thể tải file sẵn. Hãy chọn tải file từ máy.");
+        });
+    }
+
     function handleExcelUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -123,16 +144,27 @@
         const workbook = XLSX.read(dataArray, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet);
-        allData = json.map(row => ({
-          topic: row["CHỦ ĐỀ"],
-          vi: row["TIẾNG VIỆT"],
-          en: row["TIẾNG ANH"]
-        })).filter(item => item.vi && item.en && item.topic);
-        updateTopicList();
-        filterByTopic();
-        alert("Đã nạp " + allData.length + " câu.");
+        loadData(json);
       };
       reader.readAsArrayBuffer(file);
+    }
+
+    function processWorkbook(arrayBuffer) {
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+      loadData(json);
+    }
+
+    function loadData(json) {
+      allData = json.map(row => ({
+        topic: row["CHỦ ĐỀ"],
+        vi: row["TIẾNG VIỆT"],
+        en: row["TIẾNG ANH"]
+      })).filter(item => item.vi && item.en && item.topic);
+      updateTopicList();
+      filterByTopic();
+      alert("Đã nạp " + allData.length + " câu.");
     }
 
     function updateTopicList() {
@@ -182,6 +214,9 @@
       }
       speechSynthesis.speak(utterance);
     }
+
+    // Tự tải file mặc định khi mở trang
+    window.onload = loadDefault;
   </script>
 </body>
 </html>
