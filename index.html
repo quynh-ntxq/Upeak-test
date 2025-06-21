@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>ÔN BÀI TALK TO KID - Theo Chủ Đề</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 1rem;
+      font-size: 110%;
+      line-height: 1.7;
+    }
+    h1 {
+      font-size: 160%;
+    }
+    p {
+      font-size: 110%;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+    }
+    select, input[type="file"] {
+      margin: 0.5rem auto;
+      font-size: 110%;
+    }
+    #question {
+      font-size: 200%;
+      font-weight: bold;
+      margin: 1.5rem 0;
+      color: #000;
+    }
+    #answer {
+      font-size: 150%;
+      margin: 1rem auto;
+      color: #007b00;
+      display: none;
+      max-width: 90%;
+      line-height: 1.4;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .button-group button, .upload-wrapper label {
+      padding: 0.5rem 1rem;
+      font-size: 126%;
+      cursor: pointer;
+      border: none;
+      border-radius: 1rem;
+      background: #f2f2f2;
+      color: #0066cc;
+      display: inline-block;
+    }
+    input[type="file"] {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        font-size: 102%;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 144%;
+      }
+      p {
+        font-size: 96%;
+      }
+      #question {
+        font-size: 168%;
+      }
+      #answer {
+        font-size: 144%;
+      }
+      .button-group button, .upload-wrapper label {
+        font-size: 118%;
+        padding: 0.5rem 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>ÔN BÀI TALK TO KID</h1>
+  <p>Chọn chủ đề bạn muốn học hoặc tải lên file mới từ máy.</p>
+
+  <div class="upload-wrapper">
+    <label for="upload">📁 Tải file Excel có cột CHỦ ĐỀ lên</label>
+    <input type="file" id="upload" accept=".xlsx" onchange="handleExcelUpload(event)">
+  </div>
+
+  <div>
+    <label for="topicSelect">🗂️ Chọn chủ đề: </label>
+    <select id="topicSelect" multiple onchange="filterByTopic()">
+      <option value="all" selected>Tất cả</option>
+    </select>
+  </div>
+
+  <div id="question">[Câu sẽ hiện ở đây]</div>
+  <div id="answer">[Câu trả lời]</div>
+
+  <div class="button-group">
+    <button onclick="showAnswer()">👁️ Xem kết quả</button>
+    <button onclick="pickRandom()">🎲 Câu tiếp theo</button>
+  </div>
+
+  <script>
+    let allData = [];
+    let filteredData = [];
+    let currentIndex = -1;
+
+    function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataArray = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(dataArray, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        allData = json.map(row => ({
+          topic: row["CHỦ ĐỀ"],
+          vi: row["TIẾNG VIỆT"],
+          en: row["TIẾNG ANH"]
+        })).filter(item => item.vi && item.en && item.topic);
+        updateTopicList();
+        filterByTopic();
+        alert("Đã nạp " + allData.length + " câu.");
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function updateTopicList() {
+      const select = document.getElementById("topicSelect");
+      const topics = [...new Set(allData.map(item => item.topic))];
+      select.innerHTML = '<option value="all" selected>Tất cả</option>';
+      topics.forEach(topic => {
+        const opt = document.createElement("option");
+        opt.value = topic;
+        opt.text = topic;
+        select.appendChild(opt);
+      });
+    }
+
+    function filterByTopic() {
+      const selectedOptions = Array.from(document.getElementById("topicSelect").selectedOptions).map(o => o.value);
+      if (selectedOptions.includes("all")) {
+        filteredData = [...allData];
+      } else {
+        filteredData = allData.filter(item => selectedOptions.includes(item.topic));
+      }
+      if (filteredData.length > 0) pickRandom();
+    }
+
+    function pickRandom() {
+      if (filteredData.length === 0) {
+        alert("Không có dữ liệu phù hợp.");
+        return;
+      }
+      currentIndex = Math.floor(Math.random() * filteredData.length);
+      document.getElementById("question").innerText = filteredData[currentIndex].vi;
+      document.getElementById("answer").style.display = "none";
+    }
+
+    function showAnswer() {
+      if (currentIndex === -1) return;
+      const answerText = filteredData[currentIndex].en;
+      document.getElementById("answer").innerText = answerText;
+      document.getElementById("answer").style.display = "block";
+
+      const utterance = new SpeechSynthesisUtterance(answerText);
+      utterance.lang = 'en-US';
+      const voices = speechSynthesis.getVoices();
+      const americanVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Microsoft')));
+      if (americanVoice) {
+        utterance.voice = americanVoice;
+      }
+      speechSynthesis.speak(utterance);
+    }
+  </script>
+</body>
+</html>
