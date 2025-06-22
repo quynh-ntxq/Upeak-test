@@ -136,7 +136,7 @@
             topic: row["CHU_DE"]?.toString().trim(),
             vi: row["DE_BAI"]?.toString().trim(),
             en: row["DAP_AN"]?.toString().trim()
-          })).filter(item => item.topic && item.vi && item.en);
+          })).filter(item => item.topic && item.vi);
 
           createTopicCheckboxes();
           return;
