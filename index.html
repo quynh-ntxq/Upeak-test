@@ -115,8 +115,8 @@
       const files = await fetch(window.location.href)
         .then(res => res.text())
         .then(html => {
-          const matches = html.match(/href="([^"]+\.xlsx)"/g);
-          return matches ? matches.map(m => m.replace(/href=|"/g, '')) : [];
+          const matches = html.match(/href="([^\"]+\.xlsx)"/g);
+          return matches ? matches.map(m => m.replace(/href=|\"/g, '')) : [];
         });
 
       for (const file of files) {
@@ -126,17 +126,24 @@
 
           const buffer = await res.arrayBuffer();
           const workbook = XLSX.read(buffer, { type: "array" });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet);
 
-          allData = json.map(row => ({
-            topic: row["CHU_DE"]?.toString().trim(),
-            vi: row["DE_BAI"]?.toString().trim(),
-            en: row["DAP_AN"]?.toString().trim()
-          })).filter(item => item.topic && item.vi);
+          for (const sheetName of workbook.SheetNames) {
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-          createTopicCheckboxes();
-          return;
+            const data = json.map(row => ({
+              topic: row["CHU_DE"]?.toString().trim(),
+              vi: row["DE_BAI"]?.toString().trim(),
+              en: row["DAP_AN"]?.toString().trim()
+            })).filter(item => item.topic && item.vi);
+
+            allData.push(...data);
+          }
+
+          if (allData.length > 0) {
+            createTopicCheckboxes();
+            return;
+          }
         } catch (err) {
           console.log("Không thể đọc file:", file);
         }
