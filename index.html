@@ -60,7 +60,7 @@
       font-size: 0.9em;
       cursor: pointer;
     }
-    .btn-primary { background: #002F87; color: white; }
+    .btn-primary { background: #002F87; color: white; font-size: 0.85em; padding: 4px 12px; }
     .btn-secondary { background: #4CAF50; color: white; }
     #topicContainer {
       display: none;
@@ -93,6 +93,7 @@
       font-size: 0.8em;
       color: #333;
       margin-bottom: 8px;
+      display: block;
     }
   </style>
 </head>
@@ -107,6 +108,7 @@
     <div id="topicContainer">
       <div id="selectedCount">Số chủ đề đã chọn: 0</div>
       <div id="topicOptions" class="topic-options">Đang tải dữ liệu...</div>
+      <button class="btn btn-primary" onclick="confirmTopics()">✅ Xác nhận chủ đề</button>
     </div>
 
     <div class="question" id="question">Chưa có dữ liệu.</div>
@@ -157,6 +159,15 @@
       container.style.display = container.style.display === "none" ? "block" : "none";
     }
 
+    function confirmTopics() {
+      const totalSelected = new Set(filteredData.map(d => d.topic)).size;
+      if (totalSelected === 0) {
+        alert("Vui lòng chọn ít nhất một chủ đề!");
+        return;
+      }
+      toggleTopics();
+    }
+
     function createTopicCheckboxes() {
       const container = document.getElementById("topicOptions");
       const topics = [...new Set(allData.map(d => d.topic))].sort();
@@ -200,10 +211,11 @@
       document.getElementById("nextBtn").disabled = filteredData.length === 0;
       document.getElementById("showAnswerBtn").disabled = true;
 
-      document.getElementById("selectedCount").innerText = `Số chủ đề đã chọn: ${new Set(filteredData.map(d => d.topic)).size}`;
+      const count = document.getElementById("selectedCount");
+      count.innerText = `Số chủ đề đã chọn: ${new Set(filteredData.map(d => d.topic)).size}`;
 
       if (filteredData.length > 0) {
-        document.getElementById("topicContainer").style.display = "none";
+        document.getElementById("question").innerText = "";
         nextQuestion();
       } else {
         document.getElementById("question").innerText = "Vui lòng chọn ít nhất một chủ đề!";
