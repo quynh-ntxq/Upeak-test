@@ -144,6 +144,11 @@
       document.getElementById("question").innerText = "Không tìm thấy file Excel phù hợp!";
     }
 
+    function toggleTopics() {
+      const container = document.getElementById("topicContainer");
+      container.style.display = container.style.display === "none" ? "block" : "none";
+    }
+
     function createTopicCheckboxes() {
       const container = document.getElementById("topicOptions");
       const topics = [...new Set(allData.map(d => d.topic))].sort();
