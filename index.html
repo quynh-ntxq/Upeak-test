@@ -27,8 +27,9 @@
       text-align: center;
     }
     .header h1 {
-      font-size: 2em;
-      color: red; text-transform: uppercase;
+      font-size: 1.2em;
+      color: red; 
+      text-transform: uppercase;
       margin-bottom: 10px;
     }
     .header p {
@@ -67,26 +68,32 @@
     }
     .topic-options {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-      gap: 6px;
-      max-height: 100px;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 4px;
+      max-height: 90px;
       overflow-y: auto;
-      padding: 6px;
+      padding: 4px;
       border: 1px solid #ddd;
       border-radius: 6px;
       background: #f8f8f8;
     }
     .topic-option {
       background: #f0f0f0;
-      padding: 3px 6px;
+      padding: 2px 4px;
       border-radius: 4px;
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 0.6em;
+      font-size: 0.5em;
     }
     .topic-option input[type="checkbox"] {
       cursor: pointer;
+    }
+    #counter {
+      font-size: 0.9em;
+      color: #444;
+      margin-top: -10px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -102,6 +109,7 @@
       <div id="topicOptions" class="topic-options">Đang tải dữ liệu...</div>
     </div>
 
+    <div id="counter"></div>
     <div class="question" id="question">Chưa có dữ liệu.</div>
     <div class="answer" id="answer"></div>
 
@@ -173,16 +181,18 @@
     }
 
     function handleTopicFilter() {
-      const checkAll = document.getElementById("allTopics").checked;
+      const allToggle = document.getElementById("allTopics");
       const checkboxes = document.querySelectorAll(".topicCheckbox");
 
-      let selectedTopics = [];
-
-      if (checkAll) {
+      if (allToggle.checked && filteredData.length === allData.length) {
+        allToggle.checked = false;
+        checkboxes.forEach(cb => cb.checked = false);
+        filteredData = [];
+      } else if (allToggle.checked) {
         filteredData = [...allData];
         checkboxes.forEach(cb => cb.checked = false);
       } else {
-        selectedTopics = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+        const selectedTopics = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
         filteredData = allData.filter(item => selectedTopics.includes(item.topic));
       }
 
@@ -190,10 +200,12 @@
       document.getElementById("showAnswerBtn").disabled = true;
 
       if (filteredData.length > 0) {
+        document.getElementById("topicContainer").style.display = "none"; // auto hide
         nextQuestion();
       } else {
         document.getElementById("question").innerText = "Vui lòng chọn ít nhất một chủ đề!";
         document.getElementById("answer").innerText = "";
+        document.getElementById("counter").innerText = "";
       }
     }
 
@@ -205,6 +217,9 @@
       document.getElementById("answer").innerText = q.en;
       document.getElementById("answer").classList.remove("show");
       document.getElementById("showAnswerBtn").disabled = false;
+
+      const remaining = filteredData.length;
+      document.getElementById("counter").innerText = `Số câu còn lại: ${remaining}`;
     }
 
     function showAnswer() {
