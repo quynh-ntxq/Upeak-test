@@ -95,6 +95,12 @@
       margin-bottom: 8px;
       display: block;
     }
+    #selectedCountInline {
+      font-size: 0.8em;
+      color: #333;
+      display: inline-block;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -104,7 +110,11 @@
       <p>Ôn luyện mỗi ngày một chút, để tự tin giao tiếp hơn.</p>
     </div>
 
-    <button onclick="toggleTopics()" class="btn btn-primary">🎯 Chọn chủ đề</button>
+    <div>
+      <button onclick="toggleTopics()" class="btn btn-primary">🎯 Chọn chủ đề</button>
+      <span id="selectedCountInline" style="display:none;"></span>
+    </div>
+
     <div id="topicContainer">
       <div id="selectedCount">Số chủ đề đã chọn: 0</div>
       <div id="topicOptions" class="topic-options">Đang tải dữ liệu...</div>
@@ -165,7 +175,7 @@
         alert("Vui lòng chọn ít nhất một chủ đề!");
         return;
       }
-      toggleTopics();
+      document.getElementById("topicContainer").style.display = "none";
     }
 
     function createTopicCheckboxes() {
@@ -211,8 +221,11 @@
       document.getElementById("nextBtn").disabled = filteredData.length === 0;
       document.getElementById("showAnswerBtn").disabled = true;
 
-      const count = document.getElementById("selectedCount");
-      count.innerText = `Số chủ đề đã chọn: ${new Set(filteredData.map(d => d.topic)).size}`;
+      const count = new Set(filteredData.map(d => d.topic)).size;
+      document.getElementById("selectedCount").innerText = `Số chủ đề đã chọn: ${count}`;
+      const inlineCount = document.getElementById("selectedCountInline");
+      inlineCount.innerText = `${count} chủ đề đã chọn`;
+      inlineCount.style.display = count > 0 ? "inline-block" : "none";
 
       if (filteredData.length > 0) {
         document.getElementById("question").innerText = "";
