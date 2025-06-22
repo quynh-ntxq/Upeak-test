@@ -37,7 +37,7 @@
       margin-bottom: 20px;
     }
     .question {
-      font-size: 1.8em;
+      font-size: 2em;
       font-weight: bold;
       margin: 25px 0;
       color: #333;
@@ -111,18 +111,15 @@
   <script>
     let allData = [], filteredData = [], currentIndex = -1;
 
-    const possibleFiles = [
-      'Uspeak_TTK.xlsx',
-      'data.xlsx'
-    ];
-
-    function toggleTopics() {
-      const container = document.getElementById("topicContainer");
-      container.style.display = container.style.display === "none" ? "block" : "none";
-    }
-
     async function tryLoadExcelFiles() {
-      for (const file of possibleFiles) {
+      const files = await fetch(window.location.href)
+        .then(res => res.text())
+        .then(html => {
+          const matches = html.match(/href="([^"]+\.xlsx)"/g);
+          return matches ? matches.map(m => m.replace(/href=|"/g, '')) : [];
+        });
+
+      for (const file of files) {
         try {
           const res = await fetch(file);
           if (!res.ok) continue;
